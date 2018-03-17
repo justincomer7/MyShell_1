@@ -4,9 +4,9 @@
 
 void welcome()
 {
-	printf("*****************************\n");
-	printf("**Welcome to Justin's Shell**\n");
-	printf("*****************************\n\n");
+	printf("***************************************\n");
+	printf("**Welcome to Justin and Dylan's Shell**\n");
+	printf("***************************************\n\n");
 }
 char *read_line()
 {
