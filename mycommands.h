@@ -1,6 +1,11 @@
 #define DELIM " \t\r\n\a"
 #define BUFF_FOR_GREP 100
 #define BUFFSIZE 64
+#include <grp.h>
+#include <pwd.h>
+#include <locale.h>
+#include <time.h>
+#include <langinfo.h>
 
 void welcome()
 {
@@ -62,7 +67,18 @@ void list_long()
 		printf((mystat.st_mode & S_IROTH) ? "r" : "-");	
 		printf((mystat.st_mode & S_IWOTH) ? "w" : "-");
 		printf((mystat.st_mode & S_IXOTH) ? "x " : "- ");
-		printf("%zu", mystat.st_size);
+		printf(" %lu ", mystat.st_nlink);
+		struct passwd *ow = getpwuid(mystat.st_uid);
+		if(ow != NULL)
+			printf(" %-12.12s", ow->pw_name);
+		struct group *grp = getgrgid(mystat.st_gid);
+		if(grp != NULL)
+			printf(" %-12.12s", grp->gr_name);
+		struct tm *tm = localtime(&mystat.st_mtime);
+		char datestring[256];
+		strftime(datestring, sizeof(datestring), nl_langinfo(D_T_FMT), tm);
+		printf(" %zu", mystat.st_size);
+		printf(" %s ", datestring);
 		printf(" %s\n", de->d_name);
 	}
 	closedir(dr);
