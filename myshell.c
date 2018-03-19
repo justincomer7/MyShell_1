@@ -118,7 +118,7 @@ int main() {
           }
           break;
         case (4):
-            system("clear");
+            printf("\033[H\033[J");
           break;
         case (5):
           {
