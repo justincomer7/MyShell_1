@@ -122,7 +122,18 @@ int main() {
           break;
         case (5):
           {
-            find(parsed[2], parsed[1]);
+		int size = get_size(parsed);; //used to count the size of parsed
+		int t = 2; //used to track which file is going in if i > 3
+		
+
+		if(size > 3){
+			while (t < size){
+			find_mul(parsed[t], parsed[1]); 
+			t++;
+			}
+		}
+		else
+            		find(parsed[2], parsed[1]);
 
           }
           break;

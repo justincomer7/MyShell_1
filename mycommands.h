@@ -84,6 +84,14 @@ void list_long()
 	closedir(dr);
 }
 
+int get_size(char ** parsed){
+	int size = 0;
+	while(parsed[size] != NULL)
+			size++;
+		
+	return size;
+}
+
 char **parser(char *line)
 {
 	int position = 0;
@@ -145,6 +153,28 @@ void copy_file(char *file1, char *file2)
 		printf("File error\n");
 }
 
+int find_mul(char *file1, char *find)
+{
+	FILE *fp; 
+	char buf[BUFF_FOR_GREP];
+	char *newline;
+
+	fp = fopen(file1, "r");
+	if(fp == NULL)
+		printf("grep: %s: No such file or directory\n", file1);
+	else
+	{
+		while (fgets(buf, BUFF_FOR_GREP, fp) != NULL)
+		{
+			if(newline = strchr(buf, '\n'))
+				*newline = '\0';
+			if(strstr(buf, find) != NULL)
+				printf("%s: ", file1);
+				printf("%s\n", buf);
+		}		
+	}
+}
+
 int find(char *file1, char *find)
 {
 	FILE *fp; 
@@ -153,7 +183,7 @@ int find(char *file1, char *find)
 
 	fp = fopen(file1, "r");
 	if(fp == NULL)
-		printf("Error\n");
+		printf("grep: %s: No such file or directory\n", file1);
 	else
 	{
 		while (fgets(buf, BUFF_FOR_GREP, fp) != NULL)
