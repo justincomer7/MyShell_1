@@ -19,11 +19,29 @@ int get_size(char ** array){ // get size of array of strings
 	return size;
 }
 
-void run_commands (char *line){ 
-    int i, found = 0;
-	char * * parsed = malloc(BUFFSIZE * sizeof(char * ));
+int check_digit(char *number){
+	char check[100];
+	strcpy(check, number);
+	
+	for (int i = 0; i < strlen(check); i++){
+		if( check[i] >= '0' && check[i] <= '9' ){
+			i++;
+		}
+		else 
+			return 0;
+	}
+	
+	return 1;
+}
 
-    parsed = parser(line);
+static void sig_alrm(int signo)
+{
+	
+}
+
+void run_commands (char **parsed){ 
+    int i, found = 0;
+	
     for (int l = 0; l < get_size(commands); l++) {
       if (strcmp(parsed[0], commands[l]) == 0) {
         found = 1;
@@ -56,7 +74,46 @@ void run_commands (char *line){
 		{
 			printf("timeout repeated\n");
 		}
+	  case (3):
+	    {
+		  make_dir(parsed[1]);
+	    }
+		break;
+	  case (4) :
+		{
+			change_dir(parsed[1]);
+		}
+		break;		
+	  case (5) : 
+	  {
+		  if(check_digit(parsed[1])){ // make sure its a number
+			if(parsed[2] != NULL)
+				for(int sel = 2; sel < get_size(parsed); sel++)
+						printf("sleep: invalid time interval '%s'\n", parsed[sel]);
+			else{
+				char num[100];
+				strcpy(num, parsed[1]);
+				int len = strlen(num);
+				int dec = 0, i;
+
+				for (i = 0; i<len; i++){
+					dec = dec * 10 + (num[i] - '0'); // makes the second string an int to be used for alarm
+				}
+				if(signal(SIGALRM, sig_alrm) == SIG_ERR)
+					printf("error in signals\n");
+				
+				int length = 0;
+				
+				char com[100];
+				alarm(dec);
+				pause();
+				alarm(0);
+			}
+		  }
+		  else
+			  printf("sleep: invalid time interval '%s'\n", parsed [1]); 
 	  }
+	}
 }
 
 
@@ -68,6 +125,9 @@ int main(int argc, char **argv, char **envp) {
   char * exit = (char * ) malloc(4 * sizeof(char));
   char * en = (char * ) malloc(2 * sizeof(char));
   char * ti = (char * ) malloc(7 * sizeof(char));
+  char * mk = (char * ) malloc(5 * sizeof(char));
+  char * cd = (char * ) malloc(2 * sizeof(char));
+  char * sl = (char * ) malloc(5 * sizeof(char));
   
   commands = malloc(BUFFSIZE * 2 * sizeof(char * ));
 
@@ -78,6 +138,12 @@ int main(int argc, char **argv, char **envp) {
   	commands[1] = en;
   strcpy(ti, "timeout");
 	commands[2] = ti;
+  strcpy(mk, "mkdir");
+	commands[3] = mk;
+  strcpy(cd, "cd");
+	commands[4] = cd;
+  strcpy(sl, "sleep");
+	commands[5] = sl;
   
   
   welcome();
@@ -85,7 +151,10 @@ int main(int argc, char **argv, char **envp) {
   int z; //variable z will be used for strcomp in our cat function
 
   do {
-    printf(">");
+	char cwd[1024];
+	if (getcwd(cwd, sizeof(cwd)) != NULL)
+       fprintf(stdout, "~%s", cwd);
+    printf("$ ");
     line = read_line();
 
     char * * parsed = malloc(BUFFSIZE * sizeof(char * ));
@@ -95,39 +164,44 @@ int main(int argc, char **argv, char **envp) {
 	//checks to see if timeout was added 
 	if(strcmp(parsed[0], ti) == 0)
 	{
-		char num[100];
-			strcpy(num, parsed[1]);
-			int len = strlen(num);
-			int dec = 0, i;
-			for (i = 0; i<len; i++){
-				dec = dec * 10 + (num[i] - '0'); // makes the second string an int to be used for alarm
-			}
-			char input[100];
-			for(int l = 2; l < get_size(parsed); l++)
-			{
-				strcpy(input, parsed[l]);
-			}
-			
-			pid_t pid;
-			pid = fork(); //creates another process where alarm is ran
-			int stat;
-			if(pid == 0){
-				alarm(dec);
-				run_commands(input);
-				/*for(int i = 0; i < 1000000000000000000; i++) used to test timeout 
+		if(parsed[3] == NULL)
+			printf("Need Command\n");
+		else{
+			if(check_digit(parsed[1])){ // make sure its a number
+				char num[100];
+				strcpy(num, parsed[1]);
+				int len = strlen(num);
+				int dec = 0, i;
+				char * * parsed2 = malloc(BUFFSIZE * sizeof(char * )); //going to contain commands after timout
+				
+				for (i = 0; i<len; i++){
+					dec = dec * 10 + (num[i] - '0'); // makes the second string an int to be used for alarm
+				}
+				
+				for(int l = 2; l < get_size(parsed); l++)
 				{
-					i = i * i; 
-				}*/
-				alarm(0);
-				_exit(0);
+					parsed2[l-2] = parsed[l];
+				}
+				
+				pid_t pid;
+				pid = fork(); //creates another process where alarm is ran
+				int stat;
+				if(pid == 0){
+					alarm(dec);
+					run_commands(parsed2);
+					alarm(0);
+					_exit(0);
+				}
+				
+			else
+				wait(&stat); // will wait for child to exit as to not create a zombie 
 			}
-		else
-			wait(&stat); // will wait for child to exit as to not create a zombie 
+			else 
+				printf("timeout: invalid time interval '%s'\n", parsed [1]); 
+		}
 	}
-	
-	
 	else
-		run_commands(line); // if no timeout was added
+		run_commands(parsed); // if no timeout was added
 }while( status != 1);
   
 }

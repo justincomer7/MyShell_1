@@ -7,6 +7,7 @@
 #include <time.h>
 #include <langinfo.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 
 void welcome()
 {
@@ -49,6 +50,30 @@ void time_out(int limit, char *command)
 	}
 	else
 		wait(&status);
+}
+
+void make_dir(char *name)
+{
+	struct stat st = {0};
+		  
+			if (stat(name, &st) == -1) {
+				if((mkdir(name, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != 0))
+					printf("error making directory\n");
+			}
+			else
+				printf("mkdir: cannot create directory '%s': File exists\n", name);
+}
+
+void change_dir(char *name)
+{
+	struct stat st = {0};
+		  
+			if (stat(name, &st) == -1) {
+				printf("-bash: cd: %s: No such file or directory\n", name);
+			}
+			else
+				if(chdir(name) != 0)
+					printf("Error changing directory\n");
 }
 
 char **parser(char *line)
