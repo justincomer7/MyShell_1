@@ -19,7 +19,7 @@ int get_size(char ** array){ // get size of array of strings
 	return size;
 }
 
-int check_digit(char *number){
+int check_digit(char *number){ //will ensure the command is a number 
 	char check[100];
 	strcpy(check, number);
 	
@@ -36,7 +36,15 @@ int check_digit(char *number){
 
 static void sig_alrm(int signo)
 {
-	
+	//handles signal
+}
+
+void kill_1(char * p){
+	int pid = atoi(p);
+	if(pid == getpid())
+		exit(1);
+	else
+		printf ("- bash: kill:(%s) - No such process\n", p);
 }
 
 void run_commands (char **parsed){ 
@@ -70,22 +78,22 @@ void run_commands (char **parsed){
 				printf("env: %s: No such file or directory\n", parsed[1]);
         }
         break;
-	  case (2):
+	  case (2): //timeout
 		{
 			printf("timeout repeated\n");
 		}
-	  case (3):
+	  case (3): //mkdir
 	    {
 		  make_dir(parsed[1]);
 	    }
 		break;
-	  case (4) :
+	  case (4) : //cd
 		{
 			change_dir(parsed[1]);
 		}
 		break;		
-	  case (5) : 
-	  {
+	  case (5) : //sleep
+		{	
 		  if(check_digit(parsed[1])){ // make sure its a number
 			if(parsed[2] != NULL)
 				for(int sel = 2; sel < get_size(parsed); sel++)
@@ -111,8 +119,43 @@ void run_commands (char **parsed){
 			}
 		  }
 		  else
-			  printf("sleep: invalid time interval '%s'\n", parsed [1]); 
+			  printf("sleep: invalid time interval '%s'\n", parsed [1]);  //no time given
+		  
+		}
+	  break;
+	  case (6) : //rmdir 
+	  {
+		  remove_dir(parsed[1]);
 	  }
+	  break;
+	  case (7) : //stat
+	  {
+		  if(parsed[1] == NULL)
+		  {
+			  printf("stat: missing operand\n");
+		  }
+		  else{
+			  int i = 1;
+			  while(parsed[i] != NULL){
+				get_stat(parsed[i]);
+				i++;
+			  }
+		  }
+	  }
+	  break;
+	  case (8) : //gets Pid for kill command 
+	  {
+		  get_Pid();
+	  }
+	  break;
+	  case (9) : //calls kill 
+	  {
+		  if(parsed[1] != NULL)
+			kill_1(parsed[1]);
+		  else	
+			  printf("Need process number\n");
+	  }
+	  break;
 	}
 }
 
@@ -128,6 +171,10 @@ int main(int argc, char **argv, char **envp) {
   char * mk = (char * ) malloc(5 * sizeof(char));
   char * cd = (char * ) malloc(2 * sizeof(char));
   char * sl = (char * ) malloc(5 * sizeof(char));
+  char * rm = (char * ) malloc(5 * sizeof(char));
+  char * st = (char * ) malloc(4 * sizeof(char));
+  char * pi = (char * ) malloc(5 * sizeof(char));
+  char * ki = (char * ) malloc(4 * sizeof(char));
   
   commands = malloc(BUFFSIZE * 2 * sizeof(char * ));
 
@@ -144,6 +191,15 @@ int main(int argc, char **argv, char **envp) {
 	commands[4] = cd;
   strcpy(sl, "sleep");
 	commands[5] = sl;
+  strcpy(rm, "rmdir");
+	commands[6] = rm;
+  strcpy(st, "stat");
+	commands[7] = st;
+  strcpy(pi, "getPid");
+	commands[8] = pi;
+  strcpy(ki, "kill");
+	commands[9] = ki;
+	
   
   
   welcome();
@@ -164,7 +220,7 @@ int main(int argc, char **argv, char **envp) {
 	//checks to see if timeout was added 
 	if(strcmp(parsed[0], ti) == 0)
 	{
-		if(parsed[3] == NULL)
+		if(parsed[2] == NULL)
 			printf("Need Command\n");
 		else{
 			if(check_digit(parsed[1])){ // make sure its a number
