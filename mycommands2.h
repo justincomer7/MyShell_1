@@ -179,3 +179,12 @@ char **parser(char *line)
 	tokens[position] = NULL;
 	return tokens;
 }
+
+void wait(pid_t pid)
+{
+    if ((pid=fork()) == 0) {
+        sleep(5);
+        exit(1);
+    }
+    cout << "Wait canceled.";
+}
